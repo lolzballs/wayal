@@ -116,13 +116,10 @@ static void init_cairo(struct wayal *app) {
     cairo_t *cairo = cairo_create(cairo_surface);
     assert(cairo);
     app->cairo = cairo;
-
-    cairo_set_source_rgb(cairo, 0, 0, 0);
-    cairo_rectangle(cairo, 0, 0, app->geom.width, app->geom.height);
-    cairo_fill(cairo);
 }
 
 static void flush(struct wayal *app) {
+    wl_surface_attach(app->surface, app->buffer, 0, 0);
     wl_surface_damage(app->surface, 0, 0, app->geom.width, app->geom.height);
     wl_surface_commit(app->surface);
 
@@ -144,6 +141,8 @@ static void render(struct wayal *app) {
 */
 
 void wayal_setup(struct wayal *app) {
+    app->input = input_create();
+
     app->display = wl_display_connect(NULL);
     if (app->display == NULL) {
         fprintf(stderr, "wl_display_connect failed\n");
@@ -177,7 +176,12 @@ void wayal_setup(struct wayal *app) {
 
     wl_registry_destroy(registry);
 
-    app->input = input_create();
+    create_buffer(app);
+    init_cairo(app);
+
+    wl_surface_commit(app->surface);
+    wl_display_dispatch(app->display);
+    wl_display_roundtrip(app->display);
 }
 
 void wayal_finish(struct wayal *app) {
@@ -193,6 +197,7 @@ void wayal_finish(struct wayal *app) {
     wl_output_destroy(app->output);
 
     app->input = NULL;
+
     app->layer_surface = NULL;
     app->layer_shell = NULL;
     app->surface = NULL;
@@ -213,39 +218,22 @@ void wayal_finish(struct wayal *app) {
 
 void wayal_run(struct wayal *app) {
     printf("wayal_run\n");
+    wayal_render(app, 0);
     while (app->running && wl_display_dispatch(app->display) != -1) {
     }
 }
 
-int main(int argc, char **argv) {
-    struct wayal app = {0};
+void wayal_render(struct wayal *app, int test) {
+    printf("wayal_render\n");
+    cairo_t *cairo = app->cairo;
 
-    // TODO: Read from config file
-    struct wayal_geom geom = {
-        .width = 640,
-        .height = 480,
-    };
-    geom.stride = geom.width * 4;
-    geom.size = geom.stride * geom.height;
-    app.geom = geom;
-    app.running = true;
+    cairo_set_source_rgb(cairo, 0, 0, 0);
+    cairo_rectangle(cairo, 0, 0, app->geom.width, app->geom.height);
+    cairo_fill(cairo);
 
-    wayal_setup(&app);
-
-    wl_surface_commit(app.surface);
-    wl_display_dispatch(app.display);
-    wl_display_roundtrip(app.display);
-
-    create_buffer(&app);
-    init_cairo(&app);
-
-    wl_surface_attach(app.surface, app.buffer, 0, 0);
-    flush(&app);
-
-    wayal_run(&app);
-
-    wayal_finish(&app);
-
-    return 0;
+    cairo_set_source_rgb(cairo, 0, 128, 0);
+    cairo_rectangle(cairo, test, 0, app->geom.width, app->geom.height);
+    cairo_fill(cairo);
+    flush(app);
 }
 

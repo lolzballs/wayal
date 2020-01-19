@@ -65,6 +65,7 @@ foreach p : client_protocols
 endforeach
 
 src_files = files(
+  'src/main.c',
   'src/wayal.c',
   'src/input.c'
 )

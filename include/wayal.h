@@ -37,5 +37,10 @@ struct wayal {
     struct wayal_geom geom;
 };
 
+void wayal_setup(struct wayal *app);
+void wayal_run(struct wayal *app);
+void wayal_render(struct wayal *app, int test);
+void wayal_finish(struct wayal *app);
+
 #endif
 
