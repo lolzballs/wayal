@@ -43,7 +43,11 @@ static void keyboard_key_listener(void *data, struct wl_keyboard *keyboard,
     if (key == 1) {
         app->running = false;
     }
-    wayal_render(app, keysym);
+
+    if (state) {
+        window_key_listener(&app->window, keysym);
+        wayal_render(app);
+    }
     printf("%d\n", keysym);
 }
 

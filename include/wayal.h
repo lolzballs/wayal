@@ -5,9 +5,11 @@
 #include <stdint.h>
 
 #include <cairo/cairo.h>
+#include <pango/pangocairo.h>
 #include <wayland-client.h>
 
 #include "input.h"
+#include "window.h"
 
 struct wayal_geom {
     uint32_t width;
@@ -32,6 +34,7 @@ struct wayal {
 
     cairo_t *cairo;
     struct wayal_input *input;
+    struct wayal_window window;
     bool running;
 
     struct wayal_geom geom;
@@ -39,7 +42,7 @@ struct wayal {
 
 void wayal_setup(struct wayal *app);
 void wayal_run(struct wayal *app);
-void wayal_render(struct wayal *app, int test);
+void wayal_render(struct wayal *app);
 void wayal_finish(struct wayal *app);
 
 #endif

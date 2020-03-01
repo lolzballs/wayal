@@ -14,10 +14,12 @@
 #include <unistd.h>
 
 #include <cairo/cairo.h>
+#include <pango/pangocairo.h>
 #include <wayland-client.h>
 
 #include "wayal.h"
 #include "input.h"
+#include "window.h"
 #include "xdg-shell-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
@@ -179,6 +181,8 @@ void wayal_setup(struct wayal *app) {
     create_buffer(app);
     init_cairo(app);
 
+    window_init(&app->window);
+
     wl_surface_commit(app->surface);
     wl_display_dispatch(app->display);
     wl_display_roundtrip(app->display);
@@ -218,12 +222,12 @@ void wayal_finish(struct wayal *app) {
 
 void wayal_run(struct wayal *app) {
     printf("wayal_run\n");
-    wayal_render(app, 0);
+    wayal_render(app);
     while (app->running && wl_display_dispatch(app->display) != -1) {
     }
 }
 
-void wayal_render(struct wayal *app, int test) {
+void wayal_render(struct wayal *app) {
     printf("wayal_render\n");
     cairo_t *cairo = app->cairo;
 
@@ -231,9 +235,8 @@ void wayal_render(struct wayal *app, int test) {
     cairo_rectangle(cairo, 0, 0, app->geom.width, app->geom.height);
     cairo_fill(cairo);
 
-    cairo_set_source_rgb(cairo, 0, 128, 0);
-    cairo_rectangle(cairo, test, 0, app->geom.width, app->geom.height);
-    cairo_fill(cairo);
+    window_render(&app->window, cairo);
+
     flush(app);
 }
 
