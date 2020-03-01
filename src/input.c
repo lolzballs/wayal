@@ -44,11 +44,13 @@ static void keyboard_key_listener(void *data, struct wl_keyboard *keyboard,
         app->running = false;
     }
 
+    bool dirty = false;
     if (state) {
-        window_key_listener(&app->window, keysym);
-        wayal_render(app);
+        dirty = window_key_listener(&app->window, keysym);
     }
-    printf("%d\n", keysym);
+
+    if (dirty)
+        wayal_render(app);
 }
 
 static void keyboard_modifiers_listener(void *data, struct wl_keyboard *keyboard,

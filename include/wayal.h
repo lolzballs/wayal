@@ -37,6 +37,9 @@ struct wayal {
     struct wayal_window window;
     bool running;
 
+    bool frame_scheduled;
+    bool frame_dirty;
+
     struct wayal_geom geom;
 };
 

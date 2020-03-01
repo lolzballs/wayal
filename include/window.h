@@ -1,6 +1,7 @@
 #ifndef _WAYAL_WINDOW_H
 #define _WAYAL_WINDOW_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -16,7 +17,7 @@ struct wayal_window {
 void window_init(struct wayal_window *window);
 void window_render(struct wayal_window *window, cairo_t *cairo);
 
-void window_key_listener(struct wayal_window *window, uint8_t key);
+bool window_key_listener(struct wayal_window *window, uint8_t key);
 
 #endif
 

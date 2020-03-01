@@ -13,15 +13,18 @@ void window_render(struct wayal_window *window, cairo_t *cairo) {
     pango_printf(cairo, "Monospace 14", window->search_buf);
 }
 
-void window_key_listener(struct wayal_window *window, uint8_t key) {
-    switch(key) {
+bool window_key_listener(struct wayal_window *window, uint8_t key) {
+    switch (key) {
         case 0:
-            return;
+            return false;
         case 8:
-            window->search_idx--;
+            if (window->search_idx != 0)
+                window->search_idx--;
             break;
         default:
             window->search_buf[window->search_idx++] = key;
+            break;
     }
+    return true;
 }
 

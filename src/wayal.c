@@ -75,6 +75,22 @@ static const struct wl_registry_listener registry_listener = {
     global_registry_remover,
 };
 
+static void output_frame_handle_done(void *data,
+        struct wl_callback *callback, uint32_t time) {
+	wl_callback_destroy(callback);
+
+	struct wayal *app = data;
+	app->frame_scheduled = false;
+	if (app->frame_dirty) {
+		wayal_render(app);
+		app->frame_dirty = false;
+	}
+}
+
+static const struct wl_callback_listener output_frame_listener = {
+	.done = output_frame_handle_done
+};
+
 static void create_buffer(struct wayal *app) {
     char *xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
     if (xdg_runtime_dir == NULL) {
@@ -123,24 +139,13 @@ static void init_cairo(struct wayal *app) {
 static void flush(struct wayal *app) {
     wl_surface_attach(app->surface, app->buffer, 0, 0);
     wl_surface_damage(app->surface, 0, 0, app->geom.width, app->geom.height);
+
+    struct wl_callback *callback = wl_surface_frame(app->surface);
+    wl_callback_add_listener(callback, &output_frame_listener, app);
+    app->frame_scheduled = true;
+
     wl_surface_commit(app->surface);
-
-    if (wl_display_dispatch(app->display) == -1) {
-        fprintf(stderr, "wl_display_dispatch failed\n");
-        exit(EXIT_FAILURE);
-    }
 }
-
-/*
-static void render(struct wayal *app) {
-    cairo_t *cairo = app->cairo;
-
-    cairo_set_source_rgb(cairo, 0, 128, 0);
-    cairo_rectangle(cairo, 0, 0, app->geom.width, app->geom.height);
-    cairo_fill(cairo);
-    flush(app);
-}
-*/
 
 void wayal_setup(struct wayal *app) {
     app->input = input_create();
@@ -228,6 +233,9 @@ void wayal_run(struct wayal *app) {
 }
 
 void wayal_render(struct wayal *app) {
+    if (app->frame_scheduled)
+        app->frame_dirty = true;
+
     printf("wayal_render\n");
     cairo_t *cairo = app->cairo;
 
