@@ -186,7 +186,7 @@ void wayal_setup(struct wayal *app) {
     create_buffer(app);
     init_cairo(app);
 
-    window_init(&app->window);
+    window_init(&app->window, app);
 
     wl_surface_commit(app->surface);
     wl_display_dispatch(app->display);
