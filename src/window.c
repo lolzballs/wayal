@@ -27,7 +27,10 @@ void window_render(struct wayal_window *window, cairo_t *cairo) {
     render_search_box(window, cairo);
 }
 
-bool window_key_listener(struct wayal_window *window, uint8_t key) {
+bool window_key_listener(struct wayal_window *window, uint32_t key, bool control) {
+    if (control)
+        return false;
+
     switch (key) {
         case 0:
             return false;
@@ -36,6 +39,7 @@ bool window_key_listener(struct wayal_window *window, uint8_t key) {
                 window->search_idx--;
             break;
         default:
+            printf("%d\n", key);
             window->search_buf[window->search_idx++] = key;
             break;
     }

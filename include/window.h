@@ -19,7 +19,7 @@ struct wayal_window {
 void window_init(struct wayal_window *window, struct wayal *wayal);
 void window_render(struct wayal_window *window, cairo_t *cairo);
 
-bool window_key_listener(struct wayal_window *window, uint8_t key);
+bool window_key_listener(struct wayal_window *window, uint32_t key, bool control);
 
 #endif
 

@@ -38,7 +38,7 @@ static void keyboard_leave_listener(void *data, struct wl_keyboard *keyboard,
 static void keyboard_key_listener(void *data, struct wl_keyboard *keyboard,
         uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
     struct wayal *app = data;
-    uint32_t keysym = xkb_state_key_get_utf32(app->input->keyboard.state, key + 8);
+    uint32_t character = xkb_state_key_get_utf32(app->input->keyboard.state, key + 8);
 
     if (key == 1) {
         app->running = false;
@@ -46,7 +46,12 @@ static void keyboard_key_listener(void *data, struct wl_keyboard *keyboard,
 
     bool dirty = false;
     if (state) {
-        dirty = window_key_listener(&app->window, keysym);
+        if (!character) {
+            uint32_t keysym = xkb_state_key_get_one_sym(app->input->keyboard.state, key + 8);
+            dirty = window_key_listener(&app->window, keysym, true);
+        } else {
+            dirty = window_key_listener(&app->window, character, false);
+        }
     }
 
     if (dirty)
@@ -63,6 +68,7 @@ static void keyboard_modifiers_listener(void *data, struct wl_keyboard *keyboard
 
 static void keyboard_repeat_info_listener(void *data, struct wl_keyboard *keyboard,
         int32_t rate, int32_t delay) {
+    printf("keyrepeat: %d %d\n", rate, delay);
 }
 
 const struct wl_keyboard_listener input_keyboard_listener = {
