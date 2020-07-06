@@ -12,7 +12,7 @@ struct wayal_input {
     } keyboard;
 };
 
-const struct wl_keyboard_listener input_keyboard_listener;
+extern const struct wl_keyboard_listener input_keyboard_listener;
 
 struct wayal_input* input_create();
 void input_destroy(struct wayal_input *input);
