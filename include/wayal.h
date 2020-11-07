@@ -18,6 +18,15 @@ struct wayal_geom {
     uint32_t size;
 };
 
+struct wayal_theme {
+    uint32_t width;
+    uint32_t height;
+    uint32_t border_size;
+    uint32_t border_color;
+
+    char *font;
+};
+
 struct wayal {
     struct wl_display *display;
     struct wl_compositor *compositor;
@@ -41,6 +50,7 @@ struct wayal {
     bool frame_dirty;
 
     struct wayal_geom geom;
+    struct wayal_theme theme;
 };
 
 void wayal_setup(struct wayal *app);

@@ -4,13 +4,13 @@ int main(int argc, char **argv) {
     struct wayal app = {0};
 
     // TODO: Read from config file and arguments
-    struct wayal_geom geom = {
+    struct wayal_theme theme = {
         .width = 640,
         .height = 480,
+        .border_size = 8,
+        .font = "Sans"
     };
-    geom.stride = geom.width * 4;
-    geom.size = geom.stride * geom.height;
-    app.geom = geom;
+    app.theme = theme;
     app.running = true;
 
     wayal_setup(&app);

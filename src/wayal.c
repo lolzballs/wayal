@@ -148,6 +148,11 @@ static void flush(struct wayal *app) {
 }
 
 void wayal_setup(struct wayal *app) {
+    app->geom.height = app->theme.height;
+    app->geom.width = app->theme.width;
+    app->geom.stride = app->geom.width * 4;
+    app->geom.size = app->geom.stride * app->geom.height;
+
     app->input = input_create();
 
     app->display = wl_display_connect(NULL);
