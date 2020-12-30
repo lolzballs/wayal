@@ -68,7 +68,9 @@ static void keyboard_modifiers_listener(void *data, struct wl_keyboard *keyboard
 
 static void keyboard_repeat_info_listener(void *data, struct wl_keyboard *keyboard,
         int32_t rate, int32_t delay) {
-    printf("keyrepeat: %d %d\n", rate, delay);
+    struct wayal *app = data;
+    app->input->keyboard.repeat_rate = rate;
+    app->input->keyboard.repeat_delay = delay;
 }
 
 const struct wl_keyboard_listener input_keyboard_listener = {

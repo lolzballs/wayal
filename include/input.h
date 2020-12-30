@@ -9,6 +9,9 @@ struct wayal_input {
         struct xkb_context *context;
         struct xkb_keymap *keymap;
         struct xkb_state *state;
+
+        int32_t repeat_rate;
+        int32_t repeat_delay;
     } keyboard;
 };
 
