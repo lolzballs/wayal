@@ -53,16 +53,16 @@ static void global_registry_handler(void *data, struct wl_registry *registry,
 
     printf("Got a registry event for %s id %d v%d\n", interface, id, version);
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        app->compositor = wl_registry_bind(registry, id, &wl_compositor_interface, 1);
+        app->compositor = wl_registry_bind(registry, id, &wl_compositor_interface, 4);
     } else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
-        app->layer_shell = wl_registry_bind(registry, id, &zwlr_layer_shell_v1_interface, 1);
+        app->layer_shell = wl_registry_bind(registry, id, &zwlr_layer_shell_v1_interface, 2);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
-        app->output = wl_registry_bind(registry, id, &wl_output_interface, 1);
+        app->output = wl_registry_bind(registry, id, &wl_output_interface, 3);
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
         app->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);
         wl_shm_add_listener(app->shm, &shm_listener, data);
     } else if (strcmp(interface, wl_seat_interface.name) == 0) {
-        app->seat = wl_registry_bind(registry, id, &wl_seat_interface, 1);
+        app->seat = wl_registry_bind(registry, id, &wl_seat_interface, 7);
     }
 }
 
