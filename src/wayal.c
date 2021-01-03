@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <sys/poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -145,6 +146,10 @@ static void flush(struct wayal *app) {
     app->frame_scheduled = true;
 
     wl_surface_commit(app->surface);
+
+    if (wl_display_dispatch(app->display) == -1) {
+        exit(EXIT_FAILURE);
+    }
 }
 
 void wayal_setup(struct wayal *app) {
@@ -233,7 +238,46 @@ void wayal_finish(struct wayal *app) {
 void wayal_run(struct wayal *app) {
     printf("wayal_run\n");
     wayal_render(app);
-    while (app->running && wl_display_dispatch(app->display) != -1) {
+    wl_display_dispatch(app->display);
+
+    struct pollfd fds[2] = {
+        {
+            .fd = wl_display_get_fd(app->display),
+            .events = POLLIN,
+        },
+        {
+            .fd = app->input->keyboard.repeat_timerfd,
+            .events = POLLIN,
+        },
+    };
+
+    while (app->running) {
+        int res = poll(fds, 2, -1);
+        if (res <= 0) {
+            fputs("poll() failed", stderr);
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = 0; i < res; i++) {
+            if (fds[0].revents) {
+                if (fds[0].revents & POLLIN) {
+                    if (wl_display_dispatch(app->display) == -1) {
+                        exit(EXIT_FAILURE);
+                    }
+                } else {
+                    fputs("wl_display_fd failed", stderr);
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            if (fds[1].revents) {
+                if (fds[1].revents & POLLIN) {
+                    if (input_repeat_handler(app->input, &app->window)) {
+                        wayal_render(app);
+                    }
+                }
+            }
+        }
     }
 }
 
