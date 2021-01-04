@@ -21,10 +21,12 @@ struct wayal_geom {
 struct wayal_theme {
     uint32_t width;
     uint32_t height;
+    uint32_t background_color;
     uint32_t border_size;
     uint32_t border_color;
 
     char *font;
+    uint32_t font_color;
 };
 
 struct wayal {

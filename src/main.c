@@ -7,8 +7,11 @@ int main(int argc, char **argv) {
     struct wayal_theme theme = {
         .width = 640,
         .height = 480,
+        .background_color = 0xFFFFFF0F,
         .border_size = 8,
-        .font = "Sans"
+        .border_color = 0xFF00FF7F,
+        .font = "Sans",
+        .font_color = 0xFFFFFFFF,
     };
     app.theme = theme;
     app.running = true;
