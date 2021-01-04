@@ -25,6 +25,25 @@
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 
+static struct wayal_fb *get_free_buffer(struct wayal *app) {
+    if (!app->fbs[0].busy) {
+        return &app->fbs[0];
+    }
+    if (!app->fbs[1].busy) {
+        return &app->fbs[1];
+    }
+    return NULL;
+}
+
+static void buffer_handle_release(void *data, struct wl_buffer *wl_buffer) {
+    struct wayal_fb *fb = data;
+    fb->busy = false;
+}
+
+static const struct wl_buffer_listener buffer_listener = {
+    .release = buffer_handle_release,
+};
+
 static void layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *surface,
         uint32_t serial, uint32_t width, uint32_t height) {
     printf("layer_surface_configure: %d %d\n", width, height);
@@ -92,7 +111,7 @@ static const struct wl_callback_listener output_frame_listener = {
 	.done = output_frame_handle_done
 };
 
-static void create_buffer(struct wayal *app) {
+static struct wayal_fb create_buffer(struct wayal *app) {
     char *xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
     if (xdg_runtime_dir == NULL) {
         fprintf(stderr, "XDG_RUNTIME_DIR not specified");
@@ -110,41 +129,45 @@ static void create_buffer(struct wayal *app) {
         exit(EXIT_FAILURE);
     }
 
-    void *buffer = mmap(NULL, app->geom.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (buffer == MAP_FAILED) {
+    void *data = mmap(NULL, app->geom.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (data == MAP_FAILED) {
         perror("mmap");
         exit(EXIT_FAILURE);
     }
 
     struct wl_shm_pool *pool = wl_shm_create_pool(app->shm, fd, app->geom.size);
-    app->buffer = wl_shm_pool_create_buffer(pool, 0, app->geom.width,
+    struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, app->geom.width,
             app->geom.height, app->geom.stride, WL_SHM_FORMAT_ARGB8888);
-    assert(app->buffer);
+    assert(buffer);
     wl_shm_pool_destroy(pool);
 
     close(fd);
-    app->shm_buffer = buffer;
-}
 
-static void init_cairo(struct wayal *app) {
     cairo_surface_t *cairo_surface = cairo_image_surface_create_for_data(
-            app->shm_buffer, CAIRO_FORMAT_ARGB32, app->geom.width,
+            data, CAIRO_FORMAT_ARGB32, app->geom.width,
             app->geom.height, app->geom.stride);
     assert(cairo_surface);
 
     cairo_t *cairo = cairo_create(cairo_surface);
     assert(cairo);
-    app->cairo = cairo;
+
+    struct wayal_fb ret = {
+        .buffer = buffer,
+        .data = data,
+        .cairo = cairo,
+        .surface = cairo_surface,
+        .busy = false,
+    };
+    return ret;
 }
 
-static void flush(struct wayal *app) {
-    wl_surface_attach(app->surface, app->buffer, 0, 0);
-    wl_surface_damage(app->surface, 0, 0, app->geom.width, app->geom.height);
-
+static void flush(struct wayal *app, struct wayal_fb *fb) {
     struct wl_callback *callback = wl_surface_frame(app->surface);
     wl_callback_add_listener(callback, &output_frame_listener, app);
     app->frame_scheduled = true;
 
+    wl_surface_attach(app->surface, fb->buffer, 0, 0);
+    wl_surface_damage(app->surface, 0, 0, app->geom.width, app->geom.height);
     wl_surface_commit(app->surface);
 
     if (wl_display_dispatch(app->display) == -1) {
@@ -193,8 +216,10 @@ void wayal_setup(struct wayal *app) {
 
     wl_registry_destroy(registry);
 
-    create_buffer(app);
-    init_cairo(app);
+    app->fbs[0] = create_buffer(app);
+    app->fbs[1] = create_buffer(app);
+    wl_buffer_add_listener(app->fbs[0].buffer, &buffer_listener, &app->fbs[0]);
+    wl_buffer_add_listener(app->fbs[1].buffer, &buffer_listener, &app->fbs[1]);
 
     window_init(&app->window, app);
 
@@ -208,7 +233,6 @@ void wayal_finish(struct wayal *app) {
     zwlr_layer_surface_v1_destroy(app->layer_surface);
     zwlr_layer_shell_v1_destroy(app->layer_shell);
     wl_surface_destroy(app->surface);
-    wl_buffer_destroy(app->buffer);
     wl_compositor_destroy(app->compositor);
     wl_shm_destroy(app->shm);
     wl_keyboard_destroy(app->keyboard);
@@ -217,10 +241,17 @@ void wayal_finish(struct wayal *app) {
 
     app->input = NULL;
 
+    cairo_surface_destroy(app->fbs[0].surface);
+    cairo_destroy(app->fbs[0].cairo);
+    wl_buffer_destroy(app->fbs[0].buffer);
+
+    cairo_surface_destroy(app->fbs[1].surface);
+    cairo_destroy(app->fbs[1].cairo);
+    wl_buffer_destroy(app->fbs[1].buffer);
+
     app->layer_surface = NULL;
     app->layer_shell = NULL;
     app->surface = NULL;
-    app->buffer = NULL;
     app->compositor = NULL;
     app->shm = NULL;
     app->keyboard = NULL;
@@ -282,11 +313,16 @@ void wayal_run(struct wayal *app) {
 }
 
 void wayal_render(struct wayal *app) {
+    struct wayal_fb *fb = get_free_buffer(app);
+    if (!fb)
+        return;
+    fb->busy = true;
+
     if (app->frame_scheduled)
         app->frame_dirty = true;
 
     printf("wayal_render\n");
-    cairo_t *cairo = app->cairo;
+    cairo_t *cairo = fb->cairo;
 
     cairo_set_source_rgb(cairo, 0, 0, 0);
     cairo_rectangle(cairo, 0, 0, app->geom.width, app->geom.height);
@@ -294,6 +330,6 @@ void wayal_render(struct wayal *app) {
 
     window_render(&app->window, cairo);
 
-    flush(app);
+    flush(app, fb);
 }
 

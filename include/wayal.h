@@ -29,6 +29,16 @@ struct wayal_theme {
     uint32_t font_color;
 };
 
+struct wayal_fb {
+    struct wl_buffer *buffer;
+    void *data;
+
+    cairo_t *cairo;
+    cairo_surface_t *surface;
+
+    bool busy;
+};
+
 struct wayal {
     struct wl_display *display;
     struct wl_compositor *compositor;
@@ -40,10 +50,8 @@ struct wayal {
     struct wl_seat *seat;
     struct wl_keyboard *keyboard;
 
-    struct wl_buffer *buffer;
-    void *shm_buffer;
+    struct wayal_fb fbs[2];
 
-    cairo_t *cairo;
     struct wayal_input *input;
     struct wayal_window window;
     bool running;
