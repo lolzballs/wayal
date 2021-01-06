@@ -23,7 +23,7 @@ static void render_search_box(struct wayal_window *window, cairo_t *cairo,
     pango_cairo_update_layout(cairo, layout);
     pango_cairo_show_layout(cairo, layout);
 
-    cairo_rel_move_to(cairo, 0, 24);
+    cairo_rel_move_to(cairo, 0, theme.search_height);
 }
 
 static void render_frame(struct wayal_window *window, cairo_t *cairo) {
@@ -54,13 +54,16 @@ static void render_labels(struct wayal_window *window, cairo_t *cairo,
 }
 
 void window_init(struct wayal_window *window, struct wayal *wayal) {
+    struct wayal_theme theme = wayal->theme;
+
     window->search_idx = 0;
     window->wayal = wayal;
 
-    window->inner_height = wayal->theme.height - wayal->theme.border_size * 2;
-    window->inner_width = wayal->theme.width - wayal->theme.border_size * 2;
+    window->inner_height = theme.height - theme.border_size * 2;
+    window->inner_width = theme.width - theme.border_size * 2;
 
-    window->label_count = (window->inner_height - 24) / wayal->theme.line_height;
+    window->label_count = (window->inner_height - theme.search_height) /
+        theme.line_height;
     window->labels = calloc(window->label_count, sizeof(struct wayal_label));
 
     for (size_t i = 0; i < window->label_count; i++) {

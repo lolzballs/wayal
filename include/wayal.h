@@ -25,6 +25,7 @@ struct wayal_theme {
     uint32_t border_size;
     uint32_t border_color;
 
+    uint32_t search_height;
     uint32_t line_height;
 
     char *font;

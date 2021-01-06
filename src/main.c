@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
         .border_size = 8,
         .border_color = 0xFF00FF7F,
 
+        .search_height = 32,
         .line_height = 18,
 
         .font = "Sans 18",
