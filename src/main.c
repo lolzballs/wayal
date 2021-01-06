@@ -10,7 +10,10 @@ int main(int argc, char **argv) {
         .background_color = 0xFFFFFF0F,
         .border_size = 8,
         .border_color = 0xFF00FF7F,
-        .font = "Sans",
+
+        .line_height = 18,
+
+        .font = "Sans 18",
         .font_color = 0xFFFFFFFF,
     };
     app.theme = theme;

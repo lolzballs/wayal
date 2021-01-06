@@ -9,8 +9,18 @@
 
 #define SEARCH_MAX 256
 
+struct wayal_label {
+    char *text;
+};
+
 struct wayal_window {
     struct wayal *wayal;
+
+    uint32_t inner_width;
+    uint32_t inner_height;
+
+    struct wayal_label *labels;
+    size_t label_count;
 
     char search_buf[SEARCH_MAX];
     size_t search_idx;
@@ -18,7 +28,6 @@ struct wayal_window {
 
 void window_init(struct wayal_window *window, struct wayal *wayal);
 void window_render(struct wayal_window *window, cairo_t *cairo);
-
 bool window_key_listener(struct wayal_window *window, uint32_t key, bool control);
 
 #endif
