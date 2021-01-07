@@ -1,7 +1,5 @@
-#include "window.h"
-
 #include "wayal.h"
-#include "pango.h"
+#include "window.h"
 
 static void set_source_rgba_u32(cairo_t *cairo, uint32_t rgba) {
     cairo_set_source_rgba(cairo,

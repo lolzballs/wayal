@@ -70,7 +70,6 @@ src_files = files(
   'src/wayal.c',
   'src/window.c',
   'src/input.c',
-  'src/pango.c'
 )
 
 executable(
