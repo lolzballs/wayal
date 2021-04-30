@@ -1,4 +1,5 @@
 #include "wayal.h"
+#include "xdg_app.h"
 
 int main(int argc, char **argv) {
     struct wayal app = {0};

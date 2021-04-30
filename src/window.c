@@ -1,5 +1,31 @@
 #include "wayal.h"
 #include "window.h"
+#include "xdg_app.h"
+
+static void
+update_search_results(struct wayal_window *window) {
+    /* make sure we are null-terminated */
+    window->search_buf[window->search_idx] = '\0';
+
+    struct wl_list *list = xdg_app_search(window->search_buf);
+    struct xdg_app *result;
+
+    size_t i = 0;
+    /* loop through results list in reverse -- most relevant results are at
+     * the end*/
+    wl_list_for_each_reverse(result, list, link) {
+         const char *name = xdg_app_get_name(result);
+         /* need to free previous results */
+         if (window->labels[i].text != NULL) {
+             free((void *) window->labels[i].text);
+             xdg_app_destroy(window->labels[i].app);
+         }
+
+         window->labels[i].text = name;
+         window->labels[i].app = result;
+         i++;
+    }
+}
 
 static void set_source_rgba_u32(cairo_t *cairo, uint32_t rgba) {
     cairo_set_source_rgba(cairo,
@@ -43,7 +69,10 @@ static void render_labels(struct wayal_window *window, cairo_t *cairo,
     struct wayal_theme theme = window->wayal->theme;
 
     for (size_t i = 0; i < window->label_count; i++) {
-        pango_layout_set_text(layout, window->labels[i].text, -1);
+        if (window->labels[i].text != NULL) {
+            pango_layout_set_text(layout, window->labels[i].text, -1);
+        }
+
         pango_cairo_update_layout(cairo, layout);
         pango_cairo_show_layout(cairo, layout);
 
@@ -65,7 +94,7 @@ void window_init(struct wayal_window *window, struct wayal *wayal) {
     window->labels = calloc(window->label_count, sizeof(struct wayal_label));
 
     for (size_t i = 0; i < window->label_count; i++) {
-        window->labels[i].text = "a";
+        window->labels[i].text = NULL;
     }
 }
 
@@ -94,15 +123,22 @@ bool window_key_listener(struct wayal_window *window, uint32_t key, bool control
         return false;
 
     switch (key) {
+        /* escape */
         case 0:
             return false;
+        /* backspace key */
         case 8:
             if (window->search_idx != 0)
                 window->search_idx--;
             break;
+        /* enter key */
+        case 13:
+            window->wayal->running = false;
+            xdg_app_launch(window->labels[0].app);
+            break;
         default:
-            printf("%d\n", key);
             window->search_buf[window->search_idx++] = key;
+            update_search_results(window);
             break;
     }
     return true;

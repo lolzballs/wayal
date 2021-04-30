@@ -9,8 +9,11 @@
 
 #define SEARCH_MAX 256
 
+struct xdg_app;
+
 struct wayal_label {
-    char *text;
+    const char *text;
+    struct xdg_app *app;
 };
 
 struct wayal_window {
