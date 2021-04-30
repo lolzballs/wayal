@@ -24,6 +24,7 @@ cc = meson.get_compiler('c')
 cairo = dependency('cairo')
 pangocairo = dependency('pangocairo')
 xkbcommon = dependency('xkbcommon')
+giounix = dependency('gio-unix-2.0')
 wayland_protos = dependency('wayland-protocols', version: '>=1.13')
 wl_protocol_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
 wayland_scanner = find_program('wayland-scanner')
@@ -72,12 +73,13 @@ src_files = files(
   'src/wayal.c',
   'src/window.c',
   'src/input.c',
+  'src/xdg_app.c',
 )
 
 executable(
   'wayal',
   src_files,
-  dependencies: [cairo, pangocairo, xkbcommon, wayland_client, wlr_layer_shell_unstable_v1, xdg_shell],
+  dependencies: [cairo, pangocairo, giounix, xkbcommon, wayland_client, wlr_layer_shell_unstable_v1, xdg_shell],
   include_directories: [include_directories('include')],
   install: true
 )
